@@ -11,26 +11,38 @@ const user_collections = client.db("griho_naipunya").collection("users");
 router.post("/createuser", async (req, res) => {
   const userdata = req.body;
   const insertData = await user_collections.insertOne(userdata);
-  res.send(insertData);
+  return res.send(insertData);
 });
 
 // route 2 : sign jwt
 router.post("/jwtSign", async (req, res) => {
   let userData = req.body;
   let token = jwt.sign(userData, process.env.JWT_SECRET);
-  res.send({ token });
+  return res.send({ token });
 });
 // route 3 : fetch role
 router.get("/user/role/:email", verifyJwt, async (req, res) => {
-  let userEmail = req.params.email;
-  if (req.user.email !== userEmail) {
+  const { email } = req.params;
+  const currentUserEmail = req.user.email;
+
+  // Check if the user making the request is authorized to access the given email
+  if (currentUserEmail !== email) {
     return res.status(401).send({ error: "Unauthorized access" });
   }
-  let role = await user_collections.findOne(
-    { email: userEmail },
-    { projection: { _id: 0, role: 1 } }
-  );
-  return res.send({ role });
+
+  try {
+    // Fetch user role from the database
+    const user = await user_collections.findOne(
+      { email },
+      { projection: { _id: 0, role: 1 } }
+    );
+
+    // Send the role in the response
+    res.send({ role: user.role });
+  } catch (error) {
+    // If there's an error while fetching user role, send a 500 Internal Server Error response
+    res.status(500).send({ error: "Internal server error" });
+  }
 });
 
 module.exports = router;

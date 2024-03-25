@@ -27,13 +27,13 @@ app.get("/", (req, res) => {
 
 // auth route
 app.use("/", require("./routes/authentication/auth"));
-// manage classes route
-// app.use("/", require("./routes/manageClasses/manageClasses"));
+// manage products route
+app.use("/products", require("./routes/products/manageProducts"));
 // manage users route
 // app.use("/", require("./routes/manageUsers/manageUsers"));
 // manage payments route
 // app.use("/", require("./routes/managePayments/managePayments"));
 
 app.listen(port, () => {
-  console.log(`Aperture Academy listening on port ${port}`);
+  console.log(`Griho naipunya listening on port ${port}`);
 });
