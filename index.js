@@ -30,7 +30,7 @@ app.use("/", require("./routes/authentication/auth"));
 // manage products route
 app.use("/products", require("./routes/products/manageProducts"));
 // manage users route
-// app.use("/", require("./routes/manageUsers/manageUsers"));
+app.use("/users", require("./routes/users/manageUsers"));
 // manage payments route
 // app.use("/", require("./routes/managePayments/managePayments"));
 
