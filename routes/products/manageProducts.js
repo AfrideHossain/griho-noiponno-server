@@ -5,8 +5,11 @@ const jwt = require("jsonwebtoken");
 const { client } = require("../../mongoDbConnection");
 const verifyJwt = require("../middlewares/verifyJwt");
 const adminVerify = require("../middlewares/adminVerify");
+// const { ObjectId } = require("mongodb");
 // mongo db collections
 const products_collections = client.db("griho_naipunya").collection("products");
+
+const ObjectID = require("mongodb").ObjectId;
 
 // route 1 : Add new product
 router.post("/addproduct", verifyJwt, adminVerify, async (req, res) => {
@@ -70,6 +73,26 @@ router.delete("/deleteproduct/:id", verifyJwt, adminVerify, (req, res) => {
     .catch((err) => {
       res.status(500).send(err);
     });
+});
+
+// route 5: get a product details
+router.get("/product/:id", verifyJwt, async function (req, res) {
+  var query = { _id: new ObjectID(req.params.id) };
+
+  // check whether the id is valid or not
+  if (!ObjectID.isValid(req.params.id)) {
+    return res.status(404).send("No record with such an ID exists!");
+  }
+
+  try {
+    let result = await products_collections.findOne(query);
+    if (!result)
+      return res.status(404).send("No record with such an ID exists!");
+    return res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send("Internal Server Error");
+  }
 });
 
 module.exports = router;

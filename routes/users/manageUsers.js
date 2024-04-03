@@ -45,4 +45,55 @@ router.get("/profile", verifyJwt, async (req, res) => {
   } catch (error) {}
 });
 
+// route 3: add to cart
+router.patch("/addtocart/:id", verifyJwt, async (req, res) => {
+  const id = req.params.id;
+  const quantity = req.body.quantity;
+  const user = req.user;
+  const previousCart = await users_collections.findOne(
+    { email: user.email },
+    { projection: { cart: 1 } }
+  );
+
+  const cart = [...previousCart.cart];
+  if (cart.length > 0) {
+    // check if the item is already in the cart or not if yes then increase it's quantity otherwise push new one into the array
+    let isPresent = false;
+    for (let i = 0; i < cart.length; i++) {
+      if (cart[i].productid == id) {
+        isPresent = true;
+        cart[i]["quantity"] =
+          parseInt(cart[i]["quantity"]) + parseInt(quantity);
+      }
+    }
+    if (!isPresent) {
+      cart.push({ productid: id, quantity });
+    }
+  } else {
+    cart.push({
+      productid: id,
+      quantity,
+    });
+  }
+
+  const updateCart = await users_collections.updateOne(
+    { email: user.email },
+    { $set: { cart } }
+  );
+  return res.send(updateCart);
+});
+
+// route 4: remove from cart
+router.delete("/removefromcart/:index", verifyJwt, async (req, res) => {
+  let userEmail = req.user.email;
+  let removedIndex = parseInt(req.params.index);
+  let cartData = await carts_collections
+    .findOneAndUpdate(
+      { userEmail },
+      { $pull: { items: { _id: removedIndex } } }
+    )
+    .exec();
+  return res.status(200).send(cartData.value.items);
+});
+
 module.exports = router;
