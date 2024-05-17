@@ -8,7 +8,7 @@ const verifyJwt = require("../middlewares/verifyJwt");
 // mongo db collections
 const users_collections = client.db("griho_naipunya").collection("users");
 
-// route 1 : Add new product
+// route 1 : Update user
 router.patch("/updateuser", verifyJwt, async (req, res) => {
   try {
     const userInfo = req.body;
@@ -46,8 +46,14 @@ router.get("/profile", verifyJwt, async (req, res) => {
     const user = req.user;
     const userProfile = await users_collections.findOne({ email: user.email });
     return res.send(userProfile);
-  } catch (error) {}
+  } catch (error) {
+    return res.send(error.message);
+  }
 });
+// get user's availability 
+// router.get("/availability", verifyJwt, async (req, res) => {
+
+// }
 
 // route 3: add to cart
 router.patch("/addtocart/:id", verifyJwt, async (req, res) => {
@@ -58,8 +64,8 @@ router.patch("/addtocart/:id", verifyJwt, async (req, res) => {
     { email: user.email },
     { projection: { cart: 1 } }
   );
-
-  const cart = [...previousCart.cart];
+  console.log(previousCart.cart);
+  const cart = [...(previousCart?.cart || [])];
   if (cart.length > 0) {
     // check if the item is already in the cart or not if yes then increase it's quantity otherwise push new one into the array
     let isPresent = false;
@@ -125,12 +131,10 @@ router.delete("/removefromcart/:id", verifyJwt, async (req, res) => {
     );
     console.log(updateUserCart);
     if (updateUserCart.modifiedCount > 0) {
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: `Product has been removed from your cart`,
-        });
+      return res.status(200).json({
+        success: true,
+        message: `Product has been removed from your cart`,
+      });
     } else {
       return res
         .status(404)

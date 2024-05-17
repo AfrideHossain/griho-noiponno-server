@@ -10,6 +10,13 @@ const user_collections = client.db("griho_naipunya").collection("users");
 // route 1 : Save user info to db
 router.post("/createuser", async (req, res) => {
   const userdata = req.body;
+  const user = await user_collections.findOne({ email: userdata.email });
+  if (user) {
+    return res
+      .status(400)
+      .json({ newUser: false, message: "User already exists" });
+  }
+
   const insertData = await user_collections.insertOne(userdata);
   return res.send(insertData);
 });
@@ -38,10 +45,10 @@ router.get("/user/role/:email", verifyJwt, async (req, res) => {
     );
 
     // Send the role in the response
-    res.send({ role: user.role });
+    return res.send({ role: user.role });
   } catch (error) {
     // If there's an error while fetching user role, send a 500 Internal Server Error response
-    res.status(500).send({ error: "Internal server error" });
+    return res.status(500).send({ error: "Internal server error" });
   }
 });
 

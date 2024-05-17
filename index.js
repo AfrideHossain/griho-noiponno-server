@@ -11,7 +11,7 @@ const port = process.env.PORT || 5000;
 const verifyJwt = require("./routes/middlewares/verifyJwt");
 const adminVerify = require("./routes/middlewares/adminVerify");
 const { ObjectId } = require("mongodb");
-const { read } = require("fs");
+// const { read } = require("fs");
 
 // orders collection
 const ordersCollection = client.db("griho_naipunya").collection("orders");
@@ -22,8 +22,10 @@ connectMongo();
 // cors and cors configuration
 const corsConfig = {
   origin: "*",
-  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  // methods: "*",
+  // allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 };
 app.use(cors(corsConfig));
 app.options("", cors(corsConfig));
@@ -54,7 +56,16 @@ app.use("/users", require("./routes/users/manageUsers"));
 
 // create io server
 const io = new Server(server, {
-  cors: "*",
+  // cors policy to allow access from any origin, method and credentials
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    // methods: "*",
+    // allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  },
+
+  // cors: "*",
   // allow socket to access cookies
   // cookie: true,
 });
@@ -108,7 +119,7 @@ app.post("/neworder", verifyJwt, async (req, res) => {
   const orderDetails = req.body;
   const newOrder = await ordersCollection.insertOne(orderDetails);
   if (newOrder.insertedId) {
-    io.emit("neworder", { orederid: newOrder.insertedId });
+    io.emit("neworder");
     return res.status(200).send(newOrder);
   }
   return res.status(400).send({ message: "Something went wrong" });
@@ -138,7 +149,7 @@ app.get("/order/:orderId", verifyJwt, adminVerify, async (req, res) => {
   return res.status(400).send({ message: "Something went wrong" });
 });
 
-// TODO: update order status
+// update order status
 app.patch("/orderstatus", async (req, res) => {
   const { orderId } = req.query;
   const { status } = req.body;
